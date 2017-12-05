@@ -3,6 +3,14 @@ from lib.v2 import OneDFluid
 import lib.initialConditions as ic
 import matplotlib.pyplot as plt
 
+"""
+Current state
+
+Things appear to mostly work.
+Except when I start with a density imbalance...
+I think the issue there is setting initial viscocity
+"""
+
 def main():
     x = OneDFluid(config=ic.getPressureConfig())
     i = 0
