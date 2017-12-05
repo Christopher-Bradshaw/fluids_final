@@ -49,7 +49,7 @@ class OneDFluid():
         # Pull velocity from t = -1/2 to t = 1/2
         newGrid["velocity"][1:-1] = self.grid["velocity"][1:-1] - (
                 (2 * deltaT / self.summedInitialRho / self.dx) *
-                (np.ediff1d(self.gaps["pressure"]))
+                (np.ediff1d(self.gaps["pressure"]) - np.ediff1d(self.gaps["vorticity"]))
         )
 
         # Pull position from t = 0 to t = 1
@@ -61,16 +61,24 @@ class OneDFluid():
         newGaps["volume"] = self.initialRho * (
                 np.ediff1d(newGrid["position"]) / self.dx
         )
-        # Also define this deltaV for each gap
-        deltaV = newGaps["volume"] - self.gaps["volume"]
+        # Also define this deltaVolume for each gap
+        deltaVolume = newGaps["volume"] - self.gaps["volume"]
 
         # Get the vorticity in the middle of this timestep
         # I don't think this is pulling? But see comment for my thoughts on vorticity
-        newGaps["vorticity"] = np.zeros(self.width) # Fuck vorticity for now
+        a = 1/8 # From Zack in slack.
+        gapDeltaVelocity = np.ediff1d(newGrid["velocity"])
+        newGaps["vorticity"] = 0.5 * a**2 * (
+                np.power(gapDeltaVelocity, 2) *
+                ((1 / newGaps["volume"]) + (1 / self.gaps["volume"]))
+        )
+        newGaps["vorticity"][gapDeltaVelocity > 0] = 0 # things that are expanding have no vorticity
+
+
 
         # Pull energy from t = 0 to t = 1
         newGaps["energy"] = self.gaps["energy"] - (
-                (self.gaps["pressure"] - self.gaps["vorticity"]) * deltaV
+                (self.gaps["pressure"] - self.gaps["vorticity"]) * deltaVolume
         )
 
         # Pull pressure from t = 0 to t = 1
