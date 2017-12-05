@@ -1,56 +1,12 @@
 #!/usr/bin/env python3
 import numpy as np
-import matplotlib.pyplot as plt
-
-def getDefaultConfig():
-    dx = 1
-    width = 5
-    gamma = 5/3
-    # Densities
-    initialRho = np.ones(width) # this will never change
-    summedInitialRho = np.array([
-        initialRho[i] + initialRho[i+1] for i in range(len(initialRho)-1)
-        ])
-
-    # The grid
-    grid = np.zeros(width + 1, dtype=[
-        ("position", "float64"),
-        ("velocity", "float64"),
-    ])
-    grid["position"] = np.arange(0, width + 1, dx)
-    grid["velocity"] = np.ones_like(grid["position"]) / 100
-    grid["velocity"][0] = 0
-    grid["velocity"][-1] = 0
-    # Things defined in the gaps
-    gaps = np.zeros(width, dtype=[
-        ("volume", "float64"),
-        ("vorticity", "float64"),
-        ("energy", "float64"),
-        ("pressure", "float64"),
-    ])
-    gaps["volume"] = 1/initialRho
-    gaps["vorticity"] = np.zeros(width)
-    gaps["energy"] = np.ones(width)
-    gaps["pressure"] = getPressure(gaps["energy"], gaps["volume"], gamma)
-
-    return {
-            "grid": grid,
-            "gaps": gaps,
-            "initialRho": initialRho,
-            "summedInitialRho": summedInitialRho,
-            "dx": dx,
-            "width": width,
-            "gamma": gamma,
-    }
-
-def getPressure(energy, volume, gamma):
-    return energy * (gamma - 1) / volume
+import lib.initialConditions as ic
 
 class OneDFluid():
 
     def __init__(self, config=None):
         if config is None:
-            config = getDefaultConfig()
+            config = ic.getFlatConfig()
         # Ideally would just __setattr__ but pylint doesn't like that
         self.grid = config["grid"]
         self.gaps = config["gaps"]
@@ -104,7 +60,7 @@ class OneDFluid():
         )
 
         # Pull pressure from t = 0 to t = 1
-        newGaps["pressure"] = getPressure(newGaps["energy"], newGaps["volume"], self.gamma)
+        newGaps["pressure"] = ic.getPressure(newGaps["energy"], newGaps["volume"], self.gamma)
 
         self.grid = newGrid
         self.gaps = newGaps
@@ -120,26 +76,3 @@ class OneDFluid():
         return("")
 
 
-def main():
-    x = OneDFluid()
-    i = 0
-
-    fig, ax = plt.subplots()
-    volLine, = ax.plot(x.gaps["volume"], label="Cell Volumes")
-    energyLine, = ax.plot(x.gaps["energy"], label="Cell Energies")
-    pressureLine, = ax.plot(x.gaps["pressure"], label="Cell Pressures")
-    plt.legend()
-    plt.show(block=False)
-
-    while True:
-        if i % 1000 == 0:
-            print(x)
-            volLine.set_ydata(x.gaps["volume"])
-            energyLine.set_ydata(x.gaps["energy"])
-            pressureLine.set_ydata(x.gaps["pressure"])
-            fig.canvas.draw()
-        x.evolve()
-        i += 1
-
-if __name__ == "__main__":
-    main()

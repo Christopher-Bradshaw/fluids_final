@@ -1,15 +1,28 @@
 #!/usr/bin/env python3
-from lib.bad import OneDFluid
-
-
-# Doesn't stagger things but pretty good: http://jila.colorado.edu/~ajsh/astr5540_12/prob11.pdf
-# No code, but useful math http://www2.mpia-hd.mpg.de/~dullemon/lectures/fluiddynamics08/chap_1_hydroeq.pdf
-
+from lib.v2 import OneDFluid
+import lib.initialConditions as ic
+import matplotlib.pyplot as plt
 
 def main():
-    x = OneDFluid()
+    x = OneDFluid(config=ic.getVelocityConfig())
+    i = 0
+
+    fig, ax = plt.subplots()
+    volLine, = ax.plot(x.gaps["volume"], label="Cell Volumes")
+    energyLine, = ax.plot(x.gaps["energy"], label="Cell Energies")
+    pressureLine, = ax.plot(x.gaps["pressure"], label="Cell Pressures")
+    plt.legend()
+    plt.show(block=False)
+
     while True:
+        if i % 1000 == 0:
+            print(x)
+            volLine.set_ydata(x.gaps["volume"])
+            energyLine.set_ydata(x.gaps["energy"])
+            pressureLine.set_ydata(x.gaps["pressure"])
+            fig.canvas.draw()
         x.evolve()
+        i += 1
 
 if __name__ == "__main__":
     main()
