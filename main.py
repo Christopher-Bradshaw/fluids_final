@@ -34,7 +34,6 @@ def main():
             ax.relim()
             ax.autoscale_view()
             fig.canvas.draw()
-            input()
         x.evolve()
         i += 1
 
