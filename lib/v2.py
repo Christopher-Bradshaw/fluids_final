@@ -2,41 +2,63 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def getDefaultConfig():
+    dx = 1
+    width = 5
+    gamma = 5/3
+    # Densities
+    initialRho = np.ones(width) # this will never change
+    summedInitialRho = np.array([
+        initialRho[i] + initialRho[i+1] for i in range(len(initialRho)-1)
+        ])
+
+    # The grid
+    grid = np.zeros(width + 1, dtype=[
+        ("position", "float64"),
+        ("velocity", "float64"),
+    ])
+    grid["position"] = np.arange(0, width + 1, dx)
+    grid["velocity"] = np.ones_like(grid["position"]) / 100
+    grid["velocity"][0] = 0
+    grid["velocity"][-1] = 0
+    # Things defined in the gaps
+    gaps = np.zeros(width, dtype=[
+        ("volume", "float64"),
+        ("vorticity", "float64"),
+        ("energy", "float64"),
+        ("pressure", "float64"),
+    ])
+    gaps["volume"] = 1/initialRho
+    gaps["vorticity"] = np.zeros(width)
+    gaps["energy"] = np.ones(width)
+    gaps["pressure"] = getPressure(gaps["energy"], gaps["volume"], gamma)
+
+    return {
+            "grid": grid,
+            "gaps": gaps,
+            "initialRho": initialRho,
+            "summedInitialRho": summedInitialRho,
+            "dx": dx,
+            "width": width,
+            "gamma": gamma,
+    }
+
 def getPressure(energy, volume, gamma):
     return energy * (gamma - 1) / volume
 
 class OneDFluid():
 
-    def __init__(self):
-        self.dx = 1
-        self.width = 5
-        self.gamma = 5/3
-        #
-        self.initialRho = np.ones(self.width) # this will never change
-        self.summedInitialRho = np.array([
-            self.initialRho[i] + self.initialRho[i+1] for i in range(len(self.initialRho)-1)
-            ])
-
-        # The grid
-        self.grid = np.zeros(self.width + 1, dtype=[
-            ("position", "float64"),
-            ("velocity", "float64"),
-        ])
-        self.grid["position"] = np.arange(0, self.width + 1, self.dx)
-        self.grid["velocity"] = np.ones_like(self.grid["position"]) / 100
-        self.grid["velocity"][0] = 0
-        self.grid["velocity"][-1] = 0
-        # Things defined in the gaps
-        self.gaps = np.zeros(self.width, dtype=[
-            ("volume", "float64"),
-            ("vorticity", "float64"),
-            ("energy", "float64"),
-            ("pressure", "float64"),
-        ])
-        self.gaps["volume"] = 1/self.initialRho
-        self.gaps["vorticity"] = np.zeros(self.width)
-        self.gaps["energy"] = np.ones(self.width)
-        self.gaps["pressure"] = getPressure(self.gaps["energy"], self.gaps["volume"], self.gamma)
+    def __init__(self, config=None):
+        if config is None:
+            config = getDefaultConfig()
+        # Ideally would just __setattr__ but pylint doesn't like that
+        self.grid = config["grid"]
+        self.gaps = config["gaps"]
+        self.initialRho = config["initialRho"]
+        self.summedInitialRho = config["summedInitialRho"]
+        self.dx = config["dx"]
+        self.width = config["width"]
+        self.gamma = config["gamma"]
 
     def getDeltaT(self):
         return 0.00001
