@@ -17,7 +17,7 @@ class OneDFluid():
         self.gamma = config["gamma"]
 
     def getDeltaT(self):
-        return 0.0000001
+        return 0.00001
 
     def evolve(self):
         deltaT = self.getDeltaT()

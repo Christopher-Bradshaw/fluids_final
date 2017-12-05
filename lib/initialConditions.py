@@ -44,6 +44,13 @@ def getFlatConfig():
             "gamma": gamma,
     }
 
+def getPressureConfig():
+    config = getFlatConfig()
+    config["gaps"]["energy"][0:2] = 2
+    config["gaps"]["pressure"] = getPressure(config["gaps"]["energy"], config["gaps"]["volume"], config["gamma"])
+    return config
+
+
 def getVelocityConfig():
     config = getFlatConfig()
     config["grid"]["velocity"][1:-1] += 0.01

@@ -4,7 +4,7 @@ import lib.initialConditions as ic
 import matplotlib.pyplot as plt
 
 def main():
-    x = OneDFluid(config=ic.getVelocityConfig())
+    x = OneDFluid(config=ic.getPressureConfig())
     i = 0
 
     fig, ax = plt.subplots()
