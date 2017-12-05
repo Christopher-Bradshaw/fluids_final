@@ -17,7 +17,7 @@ class OneDFluid():
         self.gamma = config["gamma"]
 
     def getDeltaT(self):
-        return 0.00001
+        return 0.0000001
 
     def evolve(self):
         deltaT = self.getDeltaT()
@@ -27,7 +27,7 @@ class OneDFluid():
         # Pull velocity from t = -1/2 to t = 1/2
         newGrid["velocity"][1:-1] = self.grid["velocity"][1:-1] - (
                 (2 * deltaT / self.summedInitialRho / self.dx) *
-                (np.ediff1d(self.gaps["pressure"]) - np.ediff1d(self.gaps["vorticity"]))
+                (np.ediff1d(self.gaps["pressure"]) - np.ediff1d(self.gaps["viscocity"]))
         )
 
         # Pull position from t = 0 to t = 1
@@ -42,21 +42,21 @@ class OneDFluid():
         # Also define this deltaVolume for each gap
         deltaVolume = newGaps["volume"] - self.gaps["volume"]
 
-        # Get the vorticity in the middle of this timestep
-        # I don't think this is pulling? But see comment for my thoughts on vorticity
+        # Get the viscocity in the middle of this timestep
+        # I don't think this is pulling? But see comment for my thoughts on viscocity
         a = 1/8 # From Zack in slack.
         gapDeltaVelocity = np.ediff1d(newGrid["velocity"])
-        newGaps["vorticity"] = 0.5 * a**2 * (
+        newGaps["viscocity"] = 0.5 * a**2 * (
                 np.power(gapDeltaVelocity, 2) *
                 ((1 / newGaps["volume"]) + (1 / self.gaps["volume"]))
         )
-        newGaps["vorticity"][gapDeltaVelocity > 0] = 0 # things that are expanding have no vorticity
+        newGaps["viscocity"][gapDeltaVelocity > 0] = 0 # things that are expanding have no viscocity
 
 
 
         # Pull energy from t = 0 to t = 1
         newGaps["energy"] = self.gaps["energy"] - (
-                (self.gaps["pressure"] - self.gaps["vorticity"]) * deltaVolume
+                (self.gaps["pressure"] - self.gaps["viscocity"]) * deltaVolume
         )
 
         # Pull pressure from t = 0 to t = 1
@@ -69,7 +69,7 @@ class OneDFluid():
     def __str__(self):
         for i in ["position", "velocity"]:
             print("{}: {}".format(i, self.grid[i]))
-        for i in ["volume", "pressure", "energy", "vorticity"]:
+        for i in ["volume", "pressure", "energy", "viscocity"]:
             print("{}: {}".format(i, self.gaps[i]))
         for i in ["initialRho", "summedInitialRho"]:
             print("{}: {}".format(i, self.__getattribute__(i)))
