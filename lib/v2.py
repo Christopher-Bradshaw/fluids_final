@@ -17,7 +17,10 @@ class OneDFluid():
         self.gamma = config["gamma"]
 
     def getDeltaT(self):
-        return 0.00001
+        soundSpeed = self.gamma * self.gaps["pressure"] * self.gaps["volume"]
+        safetyFactor = 0.3
+        deltaT = np.min((self.grid["velocity"][:-1] + soundSpeed) / self.dx)
+        return safetyFactor * deltaT
 
     def evolve(self):
         deltaT = self.getDeltaT()
